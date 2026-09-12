@@ -41,6 +41,10 @@ const handleLogin = async () => {
   } catch (err) {
     if (err.response?.data?.message) {
       errorMessage.value = err.response.data.message;
+    } else if (err.response?.data?.error) {
+      errorMessage.value = err.response.data.error;
+    } else if (err.message) {
+      errorMessage.value = `Connection error: ${err.message}. Please check your connection and server status.`;
     } else {
       errorMessage.value = 'Invalid email or password. Please verify credentials.';
     }

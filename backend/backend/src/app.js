@@ -24,9 +24,16 @@ const app = express();
 // In production: restrict to origins listed in ALLOWED_ORIGINS (comma-separated)
 // In development: allow all origins for convenience
 const isProduction = process.env.NODE_ENV === 'production';
-const allowedOrigins = process.env.ALLOWED_ORIGINS
+const configuredOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
   : [];
+
+const allowedOrigins = [
+  ...configuredOrigins,
+  'https://smartstore-pos-inventory.vercel.app',
+  'http://localhost:5173',
+  'https://localhost:5173'
+];
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -38,8 +45,12 @@ const corsOptions = {
       return callback(null, true);
     }
 
-    // Production: only allow whitelisted origins
-    if (allowedOrigins.includes(origin)) {
+    // Production: allow configured origins, Vercel production domain and preview URLs
+    const cleanOrigin = origin.trim().replace(/\/+$/, '');
+    if (
+      allowedOrigins.includes(cleanOrigin) ||
+      cleanOrigin.endsWith('.vercel.app')
+    ) {
       return callback(null, true);
     }
 
@@ -73,8 +84,9 @@ app.get('/api/health', (req, res) =>
   })
 );
 
-// Public Auth routes (register, login)
+// Public Auth routes (register, login) - mounted at /api/auth and alias /auth
 app.use('/api/auth', authRouter);
+app.use('/auth', authRouter);
 
 // Protected REST API routes (Require valid JWT)
 app.use('/api/products', verifyToken, productRouter);

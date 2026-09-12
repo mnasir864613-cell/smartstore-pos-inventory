@@ -1,10 +1,22 @@
 import axios from 'axios';
 
-// In development: VITE_API_BASE_URL defaults to '/api' (proxied by Vite to localhost:4000)
-// In production (same-origin): VITE_API_BASE_URL='/api' (served by same server/nginx)
-// In production (cross-origin): VITE_API_BASE_URL='https://api.yourdomain.com/api'
+// Resolve and normalize baseURL so endpoints (/auth/login, /products, etc.) are always routed to /api
+export const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_BASE_URL;
+  if (!envUrl) {
+    return import.meta.env.PROD
+      ? 'https://hydrolyse-uneven-polar-bear.abasthan.app/api'
+      : '/api';
+  }
+  const clean = envUrl.trim().replace(/\/+$/, '');
+  if (clean.endsWith('/api')) {
+    return clean;
+  }
+  return `${clean}/api`;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getBaseUrl(),
   headers: {
     'Content-Type': 'application/json'
   },
